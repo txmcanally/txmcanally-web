@@ -1,0 +1,10 @@
+services:
+  web:
+    name: web
+    path: .
+    type: frontend
+    dockerfile: Dockerfile
+    build_context: .
+    image_name: ghcr.io/txmcanally/txmcanally-web/web
+    version: 0.1.0
+    dependencies: []
