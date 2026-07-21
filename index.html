@@ -4,8 +4,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>txmcanally LLC</title>
+  <meta name="description" content="txmcanally LLC — a Texas-based holding company building technology businesses." />
+
+  <link rel="icon" href="/assets/favicon/favicon.ico" sizes="any" />
+  <link rel="icon" href="/assets/favicon/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/assets/favicon/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/css/tokens.css" />
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <p>Coming soon.</p>
+
+  <!-- ── Nav ─────────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo-link" aria-label="txmcanally LLC home">
+        <img
+          src="/assets/light/txm-logo-light-320.png"
+          alt="txmcanally LLC"
+          class="site-logo"
+          width="160"
+          height="75"
+        />
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#businesses">Businesses</a>
+        <a href="mailto:hello@txmcanally.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <img
+        src="/assets/dark/txm-logo-dark-640.png"
+        alt="txmcanally LLC"
+        class="hero-logo"
+        width="320"
+        height="150"
+      />
+      <h1 class="hero-headline">Building technology<br />companies from Texas.</h1>
+      <p class="hero-sub">
+        txmcanally LLC is a Texas holding company. We start, grow, and operate
+        technology businesses focused on making complex things understandable.
+      </p>
+      <a href="#businesses" class="btn-primary">Our businesses</a>
+    </div>
+  </section>
+
+  <!-- ── Businesses ────────────────────────────────────────────────────── -->
+  <section class="businesses" id="businesses">
+    <div class="container">
+      <h2 class="section-label">Businesses</h2>
+
+      <div class="business-grid">
+
+        <!-- True Home Insight -->
+        <article class="business-card">
+          <div class="business-card-logo">
+            <img
+              src="/assets/true-home-insight-logo-horizontal.png"
+              alt="True Home Insight"
+              width="260"
+              height="60"
+            />
+          </div>
+          <p class="business-card-desc">
+            A smart home intelligence ecosystem that helps homeowners understand
+            how their home performs, reduce waste, improve comfort, and catch
+            problems earlier.
+          </p>
+          <a href="https://truehomeinsight.com" class="business-card-link" target="_blank" rel="noopener">
+            truehomeinsight.com
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 11L11 3M11 3H6M11 3V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <img
+        src="/assets/light/txm-logo-light-160.png"
+        alt="txmcanally LLC"
+        class="footer-logo"
+        width="80"
+        height="38"
+      />
+      <p class="footer-copy">&copy; 2026 txmcanally LLC. All rights reserved.</p>
+    </div>
+  </footer>
+
 </body>
 </html>
