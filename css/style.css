@@ -1,0 +1,233 @@
+/* TXMcanally, LLC — Site Styles */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--txm-font-ui);
+  background: var(--txm-color-warm-white);
+  color: var(--txm-color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: var(--txm-space-6);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--txm-color-dark-bg);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo-link { display: flex; align-items: center; }
+
+.site-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--txm-space-8);
+}
+
+.site-nav a {
+  color: rgba(246,244,238,.75);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.site-nav a:hover { color: var(--txm-color-warm-white); }
+
+/* ── Hero ────────────────────────────────────────────────────────────── */
+
+.hero {
+  background: var(--txm-color-dark-bg);
+  padding-block: var(--txm-space-24) var(--txm-space-20);
+}
+
+.hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--txm-space-8);
+  max-width: 680px;
+}
+
+.hero-logo {
+  height: 64px;
+  width: auto;
+  display: block;
+  margin-bottom: var(--txm-space-4);
+}
+
+.hero-headline {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--txm-color-warm-white);
+  letter-spacing: -0.02em;
+}
+
+.hero-sub {
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: rgba(246,244,238,.7);
+  max-width: 560px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--txm-space-2);
+  background: var(--txm-color-copper);
+  color: var(--txm-color-warm-white);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: var(--txm-space-3) var(--txm-space-6);
+  border-radius: var(--txm-radius-md);
+  margin-top: var(--txm-space-4);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-primary:hover {
+  background: #973f1e;
+  transform: translateY(-1px);
+}
+
+/* ── Businesses ──────────────────────────────────────────────────────── */
+
+.businesses {
+  padding-block: var(--txm-space-20) var(--txm-space-24);
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--txm-color-muted);
+  margin-bottom: var(--txm-space-8);
+}
+
+.business-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--txm-space-6);
+}
+
+.business-card {
+  background: var(--txm-color-surface);
+  border: 1px solid var(--txm-color-line);
+  border-radius: var(--txm-radius-lg);
+  padding: var(--txm-space-8);
+  box-shadow: var(--txm-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--txm-space-5);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.business-card:hover {
+  box-shadow: 0 4px 12px rgba(30,32,34,.1), 0 16px 40px rgba(30,32,34,.09);
+  transform: translateY(-2px);
+}
+
+.business-card-logo {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+}
+
+.business-card-logo img {
+  height: 40px;
+  width: auto;
+  display: block;
+}
+
+.business-card-desc {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--txm-color-ink);
+  flex: 1;
+}
+
+.business-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--txm-space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--txm-color-blue);
+  text-decoration: none;
+  margin-top: auto;
+  transition: color 0.15s;
+}
+
+.business-card-link:hover { color: #245872; }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+.site-footer {
+  background: var(--txm-color-ink);
+  padding-block: var(--txm-space-10);
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--txm-space-6);
+  flex-wrap: wrap;
+}
+
+.footer-logo {
+  height: 28px;
+  width: auto;
+  opacity: 0.7;
+}
+
+.footer-copy {
+  font-size: 0.8125rem;
+  color: rgba(246,244,238,.45);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .header-inner { height: 56px; }
+
+  .site-nav { gap: var(--txm-space-5); }
+
+  .hero { padding-block: var(--txm-space-16) var(--txm-space-12); }
+
+  .hero-logo { height: 48px; }
+
+  .businesses { padding-block: var(--txm-space-12) var(--txm-space-16); }
+
+  .business-grid { grid-template-columns: 1fr; }
+
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+}

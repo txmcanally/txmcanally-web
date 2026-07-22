@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    platform: linux/amd64
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3

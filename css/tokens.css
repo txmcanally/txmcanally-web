@@ -1,0 +1,48 @@
+/* TXMcanally, LLC — Design Tokens
+   Derived from brand/logo-kit source colors.
+   GRAPHITE  rgb(30,32,34)   #1e2022
+   BLUE      rgb(54,101,138) #36658a
+   COPPER    rgb(176,83,42)  #b0532a
+   OFF_WHITE rgb(246,244,238)#f6f4ee
+   LIGHT_GRAY rgb(196,199,194)#c4c7c2
+   DARK_BG   rgb(17,24,31)  #11181f
+*/
+
+:root {
+  /* Brand palette */
+  --txm-color-ink:          #1e2022;
+  --txm-color-blue:         #36658a;
+  --txm-color-copper:       #b0532a;
+  --txm-color-warm-white:   #f6f4ee;
+  --txm-color-surface:      #ffffff;
+  --txm-color-light-gray:   #c4c7c2;
+  --txm-color-line:         #dddbd6;
+  --txm-color-muted:        #6b6f72;
+  --txm-color-dark-bg:      #11181f;
+
+  /* Typography */
+  --txm-font-ui: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+
+  /* Scale */
+  --txm-space-1:  4px;
+  --txm-space-2:  8px;
+  --txm-space-3:  12px;
+  --txm-space-4:  16px;
+  --txm-space-5:  20px;
+  --txm-space-6:  24px;
+  --txm-space-8:  32px;
+  --txm-space-10: 40px;
+  --txm-space-12: 48px;
+  --txm-space-16: 64px;
+  --txm-space-20: 80px;
+  --txm-space-24: 96px;
+
+  /* Radius */
+  --txm-radius-sm: 4px;
+  --txm-radius-md: 8px;
+  --txm-radius-lg: 12px;
+
+  /* Shadow */
+  --txm-shadow-card: 0 1px 3px rgba(30,32,34,.07), 0 8px 20px rgba(30,32,34,.06);
+}

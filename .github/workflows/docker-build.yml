@@ -1,0 +1,294 @@
+name: Build and Push Services
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  detect:
+    name: Detect services
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    outputs:
+      services: ${{ steps.parse.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect affected services
+        id: parse
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: python3 scripts/detect_build_services.py >> $GITHUB_OUTPUT
+
+  version:
+    name: Compute versions
+    needs: detect
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.detect.outputs.services != '[]' &&
+      needs.detect.outputs.services != ''
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.compute.outputs.versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next versions
+        id: compute
+        env:
+          SERVICES: ${{ needs.detect.outputs.services }}
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
+        run: |
+          python3 - <<'PYEOF' >> $GITHUB_OUTPUT
+          import json, os, re, subprocess, sys
+
+          def get_bump_type():
+              raw = os.environ.get("COMMITS_JSON", "[]")
+              try:
+                  commits = json.loads(raw)
+              except Exception:
+                  return "patch"
+              bump = "patch"
+              for c in commits:
+                  msg = c.get("message", "") if isinstance(c, dict) else ""
+                  for line in msg.splitlines():
+                      line = line.strip().lstrip("*- ")
+                      m = re.match(r"^(\w+)(\([^)]+\))?(!)?", line)
+                      if not m:
+                          continue
+                      if m.group(3) or "BREAKING CHANGE" in msg:
+                          return "major"
+                      if m.group(1) == "feat" and bump != "major":
+                          bump = "minor"
+              return bump
+
+          def bump_semver(version, bump_type):
+              major, minor, patch = (int(x) for x in version.split("."))
+              if bump_type == "major": return f"{major+1}.0.0"
+              if bump_type == "minor": return f"{major}.{minor+1}.0"
+              return f"{major}.{minor}.{patch+1}"
+
+          def current_version(svc):
+              result = subprocess.run(
+                  ["git", "tag", "--list", f"{svc}/v*", "--sort=-version:refname"],
+                  capture_output=True, text=True
+              )
+              tags = [t.strip() for t in result.stdout.strip().splitlines() if t.strip()]
+              if tags:
+                  return tags[0].replace(f"{svc}/v", "")
+              content = open("service_registry.yaml").read()
+              in_s = False
+              for line in content.splitlines():
+                  s = line.lstrip()
+                  if not s: continue
+                  indent = len(line) - len(s)
+                  if indent == 2 and s.rstrip() == f"{svc}:": in_s = True
+                  elif indent <= 2 and s.rstrip().endswith(":") and s.rstrip()[:-1] != svc: in_s = False
+                  if in_s and indent == 4 and s.startswith("version:"):
+                      return s.split(":", 1)[1].strip()
+              return "0.0.0"
+
+          services = json.loads(os.environ["SERVICES"])
+          bump_type = get_bump_type()
+          versions = {}
+          for svc in services:
+              cur = current_version(svc)
+              versions[svc] = bump_semver(cur, bump_type)
+              print(f"{svc}: {cur} -> {versions[svc]} ({bump_type})", file=sys.stderr)
+          print(f"versions={json.dumps(versions)}")
+          PYEOF
+
+  update_registry:
+    name: Update service registry
+    needs: [detect, version]
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor != 'github-actions[bot]' && github.actor != 'txmcanally-releaser[bot]' &&
+      needs.detect.outputs.services != '[]' &&
+      needs.detect.outputs.services != '' &&
+      needs.version.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.RELEASER_APP_ID }}
+          private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Sync registry versions
+        env:
+          SERVICES: ${{ needs.detect.outputs.services }}
+          VERSIONS_JSON: ${{ needs.version.outputs.versions }}
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import pathlib
+
+          registry_path = pathlib.Path("service_registry.yaml")
+          services = set(json.loads(os.environ["SERVICES"]))
+          versions = json.loads(os.environ.get("VERSIONS_JSON") or "{}")
+
+          lines = registry_path.read_text().splitlines()
+          updated_lines = []
+          current_service = None
+          changed = False
+
+          for line in lines:
+              stripped = line.lstrip()
+              indent = len(line) - len(stripped)
+
+              if indent == 2 and stripped.rstrip().endswith(":"):
+                  current_service = stripped.rstrip()[:-1]
+
+              if current_service in services and indent == 4 and stripped.startswith("version:"):
+                  version = versions.get(current_service)
+                  if version:
+                      new_line = f"    version: {version}"
+                      if line != new_line:
+                          line = new_line
+                          changed = True
+
+              updated_lines.append(line)
+
+          if changed:
+              registry_path.write_text("\n".join(updated_lines) + "\n")
+          PYEOF
+
+      - name: Commit registry update
+        run: |
+          if git diff --quiet -- service_registry.yaml; then
+            exit 0
+          fi
+
+          git config user.name "txmcanally-releaser[bot]"
+          git config user.email "txmcanally-releaser[bot]@users.noreply.github.com"
+          git add service_registry.yaml
+          git commit -m "chore(web): sync service registry versions [skip ci]"
+          git push origin HEAD:main
+
+  build:
+    name: Build ${{ matrix.service }}
+    needs: [detect, version, update_registry]
+    if: |
+      github.actor != 'github-actions[bot]' && github.actor != 'txmcanally-releaser[bot]' &&
+      always() &&
+      needs.detect.result == 'success' &&
+      needs.update_registry.result == 'success' &&
+      (needs.version.result == 'success' || needs.version.result == 'skipped') &&
+      needs.detect.outputs.services != '[]' &&
+      needs.detect.outputs.services != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect.outputs.services) }}
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Read service metadata
+        id: meta
+        env:
+          SERVICE: ${{ matrix.service }}
+          VERSIONS_JSON: ${{ needs.version.outputs.versions || '{}' }}
+        run: |
+          python3 - <<'PYEOF' >> "$GITHUB_OUTPUT"
+          import os, json
+          svc = os.environ["SERVICE"]
+          content = open("service_registry.yaml").read()
+          def get(field):
+              in_s = False
+              for line in content.splitlines():
+                  s = line.lstrip()
+                  if not s:
+                      continue
+                  indent = len(line) - len(s)
+                  if indent == 2 and s.rstrip() == f"{svc}:":
+                      in_s = True
+                  elif indent <= 2 and s.rstrip().endswith(":") and s.rstrip()[:-1] != svc:
+                      in_s = False
+                  if in_s and indent == 4 and s.startswith(f"{field}:"):
+                      return s.split(":", 1)[1].strip()
+              return ""
+          versions = json.loads(os.environ.get("VERSIONS_JSON") or "{}")
+          version = versions.get(svc) or get("version")
+          print(f"version={version}")
+          print(f"image={get('image_name')}")
+          print(f"dockerfile={get('dockerfile')}")
+          print(f"context={get('build_context')}")
+          PYEOF
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tags
+        id: image-tags
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            branch="${GITHUB_HEAD_REF:-pr}"
+            slug=$(echo "${branch}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+|-+$//g' | cut -c1-80)
+            short_sha="${GITHUB_SHA:0:12}"
+            {
+              echo "tags<<EOF"
+              echo "${IMAGE}:pr-${slug}-${short_sha}"
+              echo "${IMAGE}:pr-${slug}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "tags<<EOF"
+              echo "${IMAGE}:v${VERSION}"
+              echo "${IMAGE}:latest"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ steps.meta.outputs.context }}
+          file: ${{ steps.meta.outputs.dockerfile }}
+          push: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.version.result == 'success') }}
+          tags: ${{ steps.image-tags.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
