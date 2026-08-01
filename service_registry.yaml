@@ -6,5 +6,5 @@ services:
     dockerfile: Dockerfile
     build_context: .
     image_name: ghcr.io/txmcanally/txmcanally-web/web
-    version: 0.2.0
+    version: 0.3.0
     dependencies: []
