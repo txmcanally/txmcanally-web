@@ -200,7 +200,7 @@ jobs:
       github.actor != 'github-actions[bot]' && github.actor != 'txmcanally-releaser[bot]' &&
       always() &&
       needs.detect.result == 'success' &&
-      needs.update_registry.result == 'success' &&
+      (needs.update_registry.result == 'success' || needs.update_registry.result == 'skipped') &&
       (needs.version.result == 'success' || needs.version.result == 'skipped') &&
       needs.detect.outputs.services != '[]' &&
       needs.detect.outputs.services != ''
@@ -255,6 +255,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -288,6 +291,7 @@ jobs:
         with:
           context: ${{ steps.meta.outputs.context }}
           file: ${{ steps.meta.outputs.dockerfile }}
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.version.result == 'success') }}
           tags: ${{ steps.image-tags.outputs.tags }}
           cache-from: type=gha
